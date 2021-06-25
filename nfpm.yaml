@@ -1,0 +1,24 @@
+arch: amd64
+depends:
+- coral-api
+description: InAccel - TLS/SSL and crypto library
+homepage: https://inaccel.com
+license: Apache-2.0
+maintainer: InAccel <info@inaccel.com>
+name: inaccel-openssl
+overrides:
+  deb:
+    contents:
+    - dst: /usr/include
+      src: include
+    - dst: /usr/lib/libinaccel-crypto.so
+      src: libinaccel-crypto.so
+  rpm:
+    contents:
+    - dst: /usr/include
+      src: include
+    - dst: /usr/lib64/libinaccel-crypto.so
+      src: libinaccel-crypto.so
+release: ${RELEASE}
+vendor: InAccel
+version: 1.0.2${VERSION}
