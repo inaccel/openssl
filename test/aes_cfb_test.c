@@ -103,11 +103,11 @@ int main() {
 	}
 
 	int num_decrypt = 0;
-	if (inaccel_decrypt(cipher, plain, length, userKey, bits, ivec, &num_decrypt)) {
-		if (decrypt(cipher, plain, length, userKey, bits, ivec, &num_decrypt)) {
+#ifndef GOLDEN
+	if (inaccel_decrypt(cipher, plain, length, userKey, bits, ivec, &num_decrypt))
+#endif
+		if (decrypt(cipher, plain, length, userKey, bits, ivec, &num_decrypt))
 			return EXIT_FAILURE;
-		}
-	}
 
 	if (memcmp(plain, plain_golden, length)) {
 		fprintf(stderr, "bad decrypt\n");

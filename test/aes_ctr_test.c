@@ -79,19 +79,19 @@ int main() {
 
 	unsigned char ecount_buf_encrypt[AES_BLOCK_SIZE];
 	unsigned int num_encrypt = 0;
-	if (inaccel_crypt(plain_golden, cipher, length, userKey, bits, ivec, ecount_buf_encrypt, &num_encrypt)) {
-		if (crypt(plain_golden, cipher, length, userKey, bits, ivec, ecount_buf_encrypt, &num_encrypt)) {
+#ifndef GOLDEN
+	if (inaccel_crypt(plain_golden, cipher, length, userKey, bits, ivec, ecount_buf_encrypt, &num_encrypt))
+#endif
+		if (crypt(plain_golden, cipher, length, userKey, bits, ivec, ecount_buf_encrypt, &num_encrypt))
 			return EXIT_FAILURE;
-		}
-	}
 
 	unsigned char ecount_buf_decrypt[AES_BLOCK_SIZE];
 	unsigned int num_decrypt = 0;
-	if (inaccel_crypt(cipher, plain, length, userKey, bits, ivec, ecount_buf_decrypt, &num_decrypt)) {
-		if (crypt(cipher, plain, length, userKey, bits, ivec, ecount_buf_decrypt, &num_decrypt)) {
+#ifndef GOLDEN
+	if (inaccel_crypt(cipher, plain, length, userKey, bits, ivec, ecount_buf_decrypt, &num_decrypt))
+#endif
+		if (crypt(cipher, plain, length, userKey, bits, ivec, ecount_buf_decrypt, &num_decrypt))
 			return EXIT_FAILURE;
-		}
-	}
 
 	if (memcmp(plain, plain_golden, length)) {
 		fprintf(stderr, "bad decrypt\n");
