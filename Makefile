@@ -6,3 +6,6 @@ libinaccel-crypto.so: crypto/aes/aes_cbc.c crypto/aes/aes_cfb.c crypto/aes/aes_c
 
 lib%.so:
 	$(LINK.c) $^ $(LOADLIBES) $(LDLIBS) $(OUTPUT_OPTION)
+
+clean:
+	$(RM) libinaccel-crypto.so

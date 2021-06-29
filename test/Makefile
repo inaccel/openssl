@@ -11,3 +11,6 @@ aes_cfb: aes_cfb_test
 
 aes_ctr: aes_ctr_test
 	./aes_ctr_test
+
+clean:
+	$(RM) aes_cbc_test aes_cfb_test aes_ctr_test
