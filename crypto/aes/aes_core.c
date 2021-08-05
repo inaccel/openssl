@@ -1,6 +1,8 @@
 #include <inaccel/openssl/aes.h>
 #include <string.h>
 
+size_t inaccel_AES_CHUNK_SIZE = 33554432;
+
 static void XtimeWord(unsigned int *w) {
 	unsigned int a, b;
 

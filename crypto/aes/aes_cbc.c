@@ -1,6 +1,8 @@
 #include <errno.h>
 #include <inaccel/openssl/aes.h>
 #include <inaccel/rpc.h>
+#include <stdlib.h>
+#include <string.h>
 
 int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t length, const inaccel_AES_KEY *key, unsigned char *ivec, const int enc) {
 	if (enc) {
@@ -9,33 +11,6 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 	} else {
 		inaccel_request request = inaccel_request_create("openssl.crypto.aes.cbc-decrypt");
 		if (!request) {
-			return -1;
-		}
-
-		if (inaccel_request_arg_array(request, length, in, 0)) {
-			int errsv = errno;
-
-			inaccel_request_release(request);
-
-			errno = errsv;
-			return -1;
-		}
-
-		if (inaccel_request_arg_array(request, length, out, 1)) {
-			int errsv = errno;
-
-			inaccel_request_release(request);
-
-			errno = errsv;
-			return -1;
-		}
-
-		if (inaccel_request_arg_scalar(request, sizeof(length), &length, 2)) {
-			int errsv = errno;
-
-			inaccel_request_release(request);
-
-			errno = errsv;
 			return -1;
 		}
 
@@ -48,47 +23,150 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 			return -1;
 		}
 
-		if (inaccel_request_arg_scalar(request, inaccel_AES_BLOCK_SIZE, ivec, 4)) {
-			int errsv = errno;
+		inaccel_response *response = NULL;
 
-			inaccel_request_release(request);
+		unsigned int chunks = 0;
 
-			errno = errsv;
-			return -1;
-		}
+		size_t chunk_offset = 0;
+		while (chunk_offset < length) {
+			size_t chunk_length = inaccel_AES_CHUNK_SIZE < length - chunk_offset ? inaccel_AES_CHUNK_SIZE : length - chunk_offset;
 
-		inaccel_response response = inaccel_response_create();
-		if (!response) {
-			int errsv = errno;
+			if (inaccel_request_arg_array(request, chunk_length, in + chunk_offset, 0)) {
+				int errsv = errno;
 
-			inaccel_request_release(request);
+				inaccel_request_release(request);
 
-			errno = errsv;
-			return -1;
-		}
+				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
 
-		if (inaccel_submit(request, response)) {
-			int errsv = errno;
+				free(response);
 
-			inaccel_request_release(request);
-			inaccel_response_release(response);
+				errno = errsv;
+				return -1;
+			}
 
-			errno = errsv;
-			return -1;
+			if (inaccel_request_arg_array(request, chunk_length, out + chunk_offset, 1)) {
+				int errsv = errno;
+
+				inaccel_request_release(request);
+
+				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
+
+				free(response);
+
+				errno = errsv;
+				return -1;
+			}
+
+			if (inaccel_request_arg_scalar(request, sizeof(chunk_length), &chunk_length, 2)) {
+				int errsv = errno;
+
+				inaccel_request_release(request);
+
+				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
+
+				free(response);
+
+				errno = errsv;
+				return -1;
+			}
+
+			if (chunk_offset > 0) {
+				memcpy(ivec, &in[chunk_offset - inaccel_AES_BLOCK_SIZE], inaccel_AES_BLOCK_SIZE);
+			}
+
+			if (inaccel_request_arg_scalar(request, inaccel_AES_BLOCK_SIZE, ivec, 4)) {
+				int errsv = errno;
+
+				inaccel_request_release(request);
+
+				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
+
+				free(response);
+
+				errno = errsv;
+				return -1;
+			}
+
+			response = (inaccel_response *) realloc(response, (chunks + 1) * sizeof(inaccel_response *));
+			if (!response) {
+				int errsv = errno;
+
+				inaccel_request_release(request);
+
+				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
+
+				free(response);
+
+				errno = errsv;
+				return -1;
+			}
+
+			response[chunks] = inaccel_response_create();
+			if (!response) {
+				int errsv = errno;
+
+				inaccel_request_release(request);
+
+				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
+
+				free(response);
+
+				errno = errsv;
+				return -1;
+			}
+
+			if (inaccel_submit(request, response[chunks])) {
+				int errsv = errno;
+
+				inaccel_request_release(request);
+
+				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
+
+				free(response);
+
+				errno = errsv;
+				return -1;
+			}
+
+			chunk_offset += chunk_length;
+
+			chunks++;
 		}
 
 		inaccel_request_release(request);
 
-		if (inaccel_response_wait(response)) {
-			int errsv = errno;
+		for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+			if (inaccel_response_wait(response[chunk])) {
+				int errsv = errno;
 
-			inaccel_response_release(response);
+				for (; chunk < chunks; chunk++) {
+					inaccel_response_release(response[chunk]);
+				}
 
-			errno = errsv;
-			return -1;
+				free(response);
+
+				errno = errsv;
+				return -1;
+			}
+
+			inaccel_response_release(response[chunk]);
 		}
 
-		inaccel_response_release(response);
+		free(response);
 
 		return 0;
 	}

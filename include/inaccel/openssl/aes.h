@@ -31,6 +31,8 @@ extern "C" {
 
 #define inaccel_AES_MAXNR 14
 
+extern size_t inaccel_AES_CHUNK_SIZE;
+
 typedef struct {
 	unsigned int rd_key[4 * (inaccel_AES_MAXNR + 1)];
 	int rounds;
