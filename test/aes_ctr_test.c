@@ -6,6 +6,10 @@
 #include <string.h>
 #include <sys/time.h>
 
+void AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size_t length, const AES_KEY *key, unsigned char ivec[AES_BLOCK_SIZE], unsigned char ecount_buf[AES_BLOCK_SIZE], unsigned int *num) {
+	CRYPTO_ctr128_encrypt(in, out, length, key, ivec, ecount_buf, num, (block128_f) AES_encrypt);
+}
+
 int crypt(const unsigned char *in, unsigned char *out, size_t length, const unsigned char *userKey, const int bits, unsigned char ivec[AES_BLOCK_SIZE], unsigned char ecount_buf[AES_BLOCK_SIZE], unsigned int *num) {
 	AES_KEY key;
 	if (AES_set_encrypt_key(userKey, bits, &key)) {
@@ -18,7 +22,7 @@ int crypt(const unsigned char *in, unsigned char *out, size_t length, const unsi
 	struct timeval a, b, res;
 	gettimeofday(&b, NULL);
 
-	CRYPTO_ctr128_encrypt(in, out, length, &key, tmp, ecount_buf, num, (block128_f) AES_encrypt);
+	AES_ctr128_encrypt(in, out, length, &key, tmp, ecount_buf, num);
 
 	gettimeofday(&a, NULL);
 	timersub(&a, &b, &res);
