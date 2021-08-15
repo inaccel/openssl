@@ -1,4 +1,5 @@
-CFLAGS = -Iinclude -O3 -Wall -fPIC
+CFLAGS = -std=c99 -O3 -Wall -fPIC
+CPPFLAGS = -Iinclude
 LDFLAGS = -shared
 LDLIBS = -lcoral-api
 
