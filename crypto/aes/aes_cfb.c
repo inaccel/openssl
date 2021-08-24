@@ -9,6 +9,21 @@ int inaccel_AES_cfb128_encrypt(const unsigned char *in, unsigned char *out, size
 		errno = EINVAL;
 		return -1;
 	} else {
+		while (*num && length) {
+			*out = ivec[*num] ^ *in;
+			ivec[*num] = *in;
+
+			in++;
+			out++;
+
+			*num = (*num + 1) % inaccel_AES_BLOCK_SIZE;
+			length--;
+		}
+
+		if (!length) {
+			return 0;
+		}
+
 		inaccel_request request = inaccel_request_create("openssl.crypto.aes.cfb128-decrypt");
 		if (!request) {
 			return -1;
@@ -29,7 +44,7 @@ int inaccel_AES_cfb128_encrypt(const unsigned char *in, unsigned char *out, size
 
 		size_t chunk_offset = 0;
 		while (chunk_offset < length) {
-			size_t chunk_length = inaccel_AES_CHUNK_SIZE < length - chunk_offset ? inaccel_AES_CHUNK_SIZE : length - chunk_offset;
+			size_t chunk_length = inaccel_AES_CHUNK_SIZE < length - chunk_offset ? inaccel_AES_CHUNK_SIZE : ((length - chunk_offset - 1) | (inaccel_AES_BLOCK_SIZE - 1)) + 1;
 
 			if (inaccel_request_arg_array(request, chunk_length, in + chunk_offset, 0)) {
 				int errsv = errno;
@@ -74,10 +89,6 @@ int inaccel_AES_cfb128_encrypt(const unsigned char *in, unsigned char *out, size
 
 				errno = errsv;
 				return -1;
-			}
-
-			if (chunk_offset > 0) {
-				memcpy(ivec, &in[chunk_offset - inaccel_AES_BLOCK_SIZE], inaccel_AES_BLOCK_SIZE);
 			}
 
 			if (inaccel_request_arg_scalar(request, inaccel_AES_BLOCK_SIZE, ivec, 4)) {
@@ -145,6 +156,8 @@ int inaccel_AES_cfb128_encrypt(const unsigned char *in, unsigned char *out, size
 			chunk_offset += chunk_length;
 
 			chunks++;
+
+			memcpy(ivec, &in[chunk_offset - inaccel_AES_BLOCK_SIZE], inaccel_AES_BLOCK_SIZE);
 		}
 
 		inaccel_request_release(request);
@@ -167,6 +180,14 @@ int inaccel_AES_cfb128_encrypt(const unsigned char *in, unsigned char *out, size
 		}
 
 		free(response);
+
+		*num = (int) (length % inaccel_AES_BLOCK_SIZE);
+
+		if (*num) {
+			for (unsigned int n = *num; n < inaccel_AES_BLOCK_SIZE; n++) {
+				ivec[n] = in[chunk_offset - inaccel_AES_BLOCK_SIZE + n] ^ out[chunk_offset - inaccel_AES_BLOCK_SIZE + n];
+			}
+		}
 
 		return 0;
 	}

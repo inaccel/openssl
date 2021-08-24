@@ -9,6 +9,10 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 		errno = EINVAL;
 		return -1;
 	} else {
+		if (!length) {
+			return 0;
+		}
+
 		inaccel_request request = inaccel_request_create("openssl.crypto.aes.cbc-decrypt");
 		if (!request) {
 			return -1;
@@ -29,7 +33,7 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 
 		size_t chunk_offset = 0;
 		while (chunk_offset < length) {
-			size_t chunk_length = inaccel_AES_CHUNK_SIZE < length - chunk_offset ? inaccel_AES_CHUNK_SIZE : length - chunk_offset;
+			size_t chunk_length = inaccel_AES_CHUNK_SIZE < length - chunk_offset ? inaccel_AES_CHUNK_SIZE : ((length - chunk_offset - 1) | (inaccel_AES_BLOCK_SIZE - 1)) + 1;
 
 			if (inaccel_request_arg_array(request, chunk_length, in + chunk_offset, 0)) {
 				int errsv = errno;
@@ -74,10 +78,6 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 
 				errno = errsv;
 				return -1;
-			}
-
-			if (chunk_offset > 0) {
-				memcpy(ivec, &in[chunk_offset - inaccel_AES_BLOCK_SIZE], inaccel_AES_BLOCK_SIZE);
 			}
 
 			if (inaccel_request_arg_scalar(request, inaccel_AES_BLOCK_SIZE, ivec, 4)) {
@@ -145,6 +145,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 			chunk_offset += chunk_length;
 
 			chunks++;
+
+			memcpy(ivec, &in[chunk_offset - inaccel_AES_BLOCK_SIZE], inaccel_AES_BLOCK_SIZE);
 		}
 
 		inaccel_request_release(request);

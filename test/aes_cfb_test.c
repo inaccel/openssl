@@ -11,17 +11,21 @@ int encrypt(const unsigned char *in, unsigned char *out, size_t length, const un
 		return -1;
 	}
 
-	unsigned char tmp[AES_BLOCK_SIZE];
-	memcpy(tmp, ivec, sizeof(tmp));
-
 	struct timeval a, b, res;
 	gettimeofday(&b, NULL);
 
-	AES_cfb128_encrypt(in, out, length, &key, tmp, num, AES_ENCRYPT);
+	AES_cfb128_encrypt(in, out, length, &key, ivec, num, AES_ENCRYPT);
 
 	gettimeofday(&a, NULL);
 	timersub(&a, &b, &res);
 	printf("AES_cfb128_encrypt: %ld.%06ld sec\n", res.tv_sec, res.tv_usec);
+
+	printf("ivec=");
+	for (unsigned int n = 0; n < AES_BLOCK_SIZE; n++) {
+		printf("%02X", ivec[n]);
+	}
+	printf("\n");
+	printf("num =%d\n", *num);
 
 	return 0;
 }
@@ -32,17 +36,21 @@ int decrypt(const unsigned char *in, unsigned char *out, size_t length, const un
 		return -1;
 	}
 
-	unsigned char tmp[AES_BLOCK_SIZE];
-	memcpy(tmp, ivec, sizeof(tmp));
-
 	struct timeval a, b, res;
 	gettimeofday(&b, NULL);
 
-	AES_cfb128_encrypt(in, out, length, &key, tmp, num, AES_DECRYPT);
+	AES_cfb128_encrypt(in, out, length, &key, ivec, num, AES_DECRYPT);
 
 	gettimeofday(&a, NULL);
 	timersub(&a, &b, &res);
 	printf("AES_cfb128_decrypt: %ld.%06ld sec\n", res.tv_sec, res.tv_usec);
+
+	printf("ivec=");
+	for (unsigned int n = 0; n < AES_BLOCK_SIZE; n++) {
+		printf("%02X", ivec[n]);
+	}
+	printf("\n");
+	printf("num =%d\n", *num);
 
 	return 0;
 }
@@ -53,13 +61,10 @@ int inaccel_decrypt(const unsigned char *in, unsigned char *out, size_t length, 
 		return -1;
 	}
 
-	unsigned char tmp[AES_BLOCK_SIZE];
-	memcpy(tmp, ivec, sizeof(tmp));
-
 	struct timeval a, b, res;
 	gettimeofday(&b, NULL);
 
-	if (inaccel_AES_cfb128_encrypt(in, out, length, &key, tmp, num, AES_DECRYPT)) {
+	if (inaccel_AES_cfb128_encrypt(in, out, length, &key, ivec, num, AES_DECRYPT)) {
 		perror("inaccel");
 
 		return -1;
@@ -68,6 +73,13 @@ int inaccel_decrypt(const unsigned char *in, unsigned char *out, size_t length, 
 	gettimeofday(&a, NULL);
 	timersub(&a, &b, &res);
 	printf("inaccel_AES_cfb128_decrypt: %ld.%06ld sec\n", res.tv_sec, res.tv_usec);
+
+	printf("ivec=");
+	for (unsigned int n = 0; n < AES_BLOCK_SIZE; n++) {
+		printf("%02X", ivec[n]);
+	}
+	printf("\n");
+	printf("num =%d\n", *num);
 
 	return 0;
 }
@@ -97,17 +109,22 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
+	unsigned char ivec_encrypt[AES_BLOCK_SIZE];
+	memcpy(ivec_encrypt, ivec, sizeof(ivec));
 	int num_encrypt = 0;
-	if (encrypt(plain_golden, cipher, length, userKey, bits, ivec, &num_encrypt)) {
+	if (encrypt(plain_golden, cipher, length, userKey, bits, ivec_encrypt, &num_encrypt)) {
 		return EXIT_FAILURE;
 	}
 
+	unsigned char ivec_decrypt[AES_BLOCK_SIZE];
+	memcpy(ivec_decrypt, ivec, sizeof(ivec));
 	int num_decrypt = 0;
-#ifndef GOLDEN
-	if (inaccel_decrypt(cipher, plain, length, userKey, bits, ivec, &num_decrypt))
+#ifdef GOLDEN
+	if (decrypt(cipher, plain, length, userKey, bits, ivec_decrypt, &num_decrypt))
+#else
+	if (inaccel_decrypt(cipher, plain, length, userKey, bits, ivec_decrypt, &num_decrypt))
 #endif
-		if (decrypt(cipher, plain, length, userKey, bits, ivec, &num_decrypt))
-			return EXIT_FAILURE;
+		return EXIT_FAILURE;
 
 	if (memcmp(plain, plain_golden, length)) {
 		fprintf(stderr, "bad decrypt\n");
