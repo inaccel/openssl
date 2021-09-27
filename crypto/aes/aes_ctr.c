@@ -47,6 +47,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			inaccel_request_release(request);
 
 			for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 
@@ -62,6 +64,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			inaccel_request_release(request);
 
 			for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 
@@ -77,6 +81,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			inaccel_request_release(request);
 
 			for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 
@@ -92,6 +98,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			inaccel_request_release(request);
 
 			for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 
@@ -108,6 +116,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			inaccel_request_release(request);
 
 			for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 
@@ -124,6 +134,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			inaccel_request_release(request);
 
 			for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 
@@ -139,6 +151,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			inaccel_request_release(request);
 
 			for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 
@@ -163,6 +177,8 @@ int inaccel_AES_ctr128_encrypt(const unsigned char *in, unsigned char *out, size
 			int errsv = errno;
 
 			for (; chunk < chunks; chunk++) {
+				inaccel_response_wait(response[chunk]);
+
 				inaccel_response_release(response[chunk]);
 			}
 

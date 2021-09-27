@@ -41,6 +41,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				inaccel_request_release(request);
 
 				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
@@ -56,6 +58,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				inaccel_request_release(request);
 
 				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
@@ -71,6 +75,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				inaccel_request_release(request);
 
 				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
@@ -86,6 +92,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				inaccel_request_release(request);
 
 				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
@@ -102,6 +110,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				inaccel_request_release(request);
 
 				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
@@ -118,6 +128,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				inaccel_request_release(request);
 
 				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
@@ -133,6 +145,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				inaccel_request_release(request);
 
 				for (unsigned int chunk = 0; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
@@ -156,6 +170,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				int errsv = errno;
 
 				for (; chunk < chunks; chunk++) {
+					inaccel_response_wait(response[chunk]);
+
 					inaccel_response_release(response[chunk]);
 				}
 
