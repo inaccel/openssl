@@ -103,8 +103,8 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				return -1;
 			}
 
-			response = (inaccel_response *) realloc(response, (chunks + 1) * sizeof(inaccel_response *));
-			if (!response) {
+			inaccel_response *_response = (inaccel_response *) realloc(response, (chunks + 1) * sizeof(inaccel_response *));
+			if (!_response) {
 				int errsv = errno;
 
 				inaccel_request_release(request);
@@ -120,9 +120,10 @@ int inaccel_AES_cbc_encrypt(const unsigned char *in, unsigned char *out, size_t 
 				errno = errsv;
 				return -1;
 			}
+			response = _response;
 
 			response[chunks] = inaccel_response_create();
-			if (!response) {
+			if (!response[chunks]) {
 				int errsv = errno;
 
 				inaccel_request_release(request);
